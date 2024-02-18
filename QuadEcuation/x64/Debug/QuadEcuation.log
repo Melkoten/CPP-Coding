@@ -1,4 +1,0 @@
-﻿  Source.cpp
-C:\Users\USER\source\repos\QuadEcuation\QuadEcuation\Source.cpp(35,29): warning C4244: =: преобразование "double" в "float", возможна потеря данных
-C:\Users\USER\source\repos\QuadEcuation\QuadEcuation\Source.cpp(36,29): warning C4244: =: преобразование "double" в "float", возможна потеря данных
-  QuadEcuation.vcxproj -> C:\Users\USER\source\repos\QuadEcuation\x64\Debug\QuadEcuation.exe
