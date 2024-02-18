@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <time.h>
-
 
 void Scan—oef(float* a, float* b, float* c) {
 	*a = 0;
