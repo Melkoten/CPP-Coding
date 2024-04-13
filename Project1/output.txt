@@ -1,0 +1,45 @@
+1 -2 1
+Ivanov
+1
+1 -4 4
+Ivanov
+2
+1 -6 9
+Ivanov
+3
+0 -8 12
+Ivanov
+1.5
+1 -4 3
+Ivanov
+1 3
+1 -2 1
+Murygin
+0
+1 -4 4
+Murygin
+2
+1 -6 9
+Murygin
+0
+0 -8 12
+Murygin
+0
+1 -4 3
+Murygin
+1 3
+1 -2 1
+Teslenko
+0
+1 -4 4
+Teslenko
+0
+1 -6 9
+Teslenko
+0
+0 -8 12
+Teslenko
+0
+1 -4 3
+Teslenko
+0
