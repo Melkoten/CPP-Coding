@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <map>
 
 std::string const inputFile = "input.txt";
 std::string const outputf = "output.txt";
@@ -136,7 +137,7 @@ public:
 
 class Bad : public Student {
 public:
-    void SolveEquations() {
+     void SolveEquations() {
         std::vector<QuadEquation> equations;
         std::vector<std::vector<double>> eqsRoots;
         equations = read(inputFile);
@@ -149,6 +150,82 @@ public:
         this->surname = sur;
     }
 };
+
+class Teacher {
+private:
+    std::string name;
+    std::map<std::string , std::vector<bool>> Grades;
+    bool compareRoot(double root, std::vector<double> const& realRoots) {
+        int t = static_cast<int>(realRoots.size());
+        bool flag = false;
+        for (int i = 0; i < t; i++) {
+            if (root == realRoots[i]) flag = true;
+        }
+        return flag;
+    }
+public:
+    Teacher(const std::string surname) {
+        this->name = surname;
+    }
+    void gradeTask() {
+        std::ifstream file(outputf);
+        std::string surname;
+        double a, b, c;
+        std::vector<double> realRoots;
+        while (!file.eof()) {
+            file >> a >> b >> c;
+            file >> surname;
+            realRoots = QuadEquation(a, b, c).solve();
+            bool flag = true;
+            double root;
+            if (file >> root) {
+                if (!compareRoot(root, realRoots)) {
+                    flag = false;
+                }
+            }
+            else {
+                file.clear();
+                file.ignore(INT_MAX, '\n');
+                if (realRoots.empty()) {
+                    flag = true;
+                }
+                else flag = false;
+            }
+            if (file.peek() != '\n' && file >> root) {
+                if (!compareRoot(root, realRoots)) {
+                    flag = false;
+                }
+            }
+            Grades[surname].push_back(flag);
+        }
+        Grades[surname].pop_back();
+        file.close();
+    }
+    void printresult() {
+        if (Grades.empty()) {
+            std::cout << "<No students/No tasks>" << std::endl;
+            return;
+        }
+        std::cout << std::endl;
+        for (auto& [surname, grades] : Grades) {
+            int len = 12 + (4) * static_cast<int>(grades.size());
+            std::cout << surname;
+            for (int i = static_cast<int>(surname.size()); i < 12; i++) {
+                std::cout << " ";
+            }
+            std::cout << "|";
+            for (int i = 0; i < grades.size(); i++) {
+                if (grades[i]) {
+                    std::cout << "+" << "|";
+                }
+                else {
+                    std::cout << "-" << "|";
+                }
+            }
+            std::cout << std::endl;
+        }
+    }
+};
 int main(void) {
     std::string sur1 = "Ivanov";
     Good stud1(sur1);
@@ -159,5 +236,9 @@ int main(void) {
     std::string sur3 = "Teslenko";
     Bad stud3(sur3);
     stud3.SolveEquations();
+    std::string sur4 = "Alekseev";
+    Teacher teach(sur4);
+    teach.gradeTask();
+    teach.printresult();
     return 0;
 }
