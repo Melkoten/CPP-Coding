@@ -12,6 +12,6 @@ enum class BlockColor {
 class Block {
 	BlockColor color;
 	public:
+		explicit Block(BlockColor color) : color(color) {}
 		BlockColor const& getcolor() const { return color; }
-		Block(BlockColor color) : color(color) {}
 };
