@@ -63,35 +63,57 @@ ChangeDirection::ChangeDirection(pair<int, int> position) : Bonus(position) {
 	image.setPosition(pos);
 	image.setFillColor(sf::Color::Blue);
 }
-void IncreaseSpeed::Action(Ball& ball, Plat& plat) {
-	printf("speed ");
-	int incrX = this->incr;
-	int incrY = this->incr;
-	if (ball.GetSpeed().first < 0) {
-		incrX = incrX * (-1);
-	}
-	if (ball.GetSpeed().second < 0) { 
-		incrY = incrY* (-1); 
-	}
 
-	ball.ChangeSpeed({ball.GetSpeed().first+incrX, ball.GetSpeed().second+incrY});
+NewBall::NewBall (pair<int, int> position) : Bonus(position) {
+	this->size = { 30,30 };
+	sf::Vector2f pos = sf::Vector2f(position.first, position.second);
+	sf::Vector2f sz = sf::Vector2f(size.first, size.second);
+	image = sf::RectangleShape(sz);
+	image.setPosition(pos);
+	image.setFillColor(sf::Color::Blue);
 }
-void IncreasePlat::Action(Ball& ball, Plat& plat) {
+void IncreaseSpeed::Action(shared_ptr<vector<Ball>> balls, Plat& plat) {
+	printf("speed ");
+	for (int i = 0; i < balls->size(); i++) {
+		int incrX = this->incr;
+		int incrY = this->incr;
+		if (balls->at(i).GetSpeed().first < 0) {
+			incrX = incrX * (-1);
+		}
+		if (balls->at(i).GetSpeed().second < 0) {
+			incrY = incrY * (-1);
+		}
+		balls->at(i).ChangeSpeed({ balls->at(i).GetSpeed().first + incrX, balls->at(i).GetSpeed().second + incrY });
+	}
+}
+void IncreasePlat::Action(shared_ptr<vector<Ball>> balls, Plat& plat) {
 	printf("plat ");
 	plat.ChangeSize({ plat.GetSize().first + this->incr,plat.GetSize().second });
 }
-void SaveOneLose::Action(Ball& ball, Plat& plat) {
+void SaveOneLose::Action(shared_ptr<vector<Ball>> balls, Plat& plat) {
 	printf("+ save ");
 	plat.ChangeSaveCount(plat.GetSave() + 1);
 }
-void ChangeDirection::Action(Ball& ball, Plat& plat) {
+void ChangeDirection::Action(shared_ptr<vector<Ball>> balls, Plat& plat) {
 	printf("direction ");
 	int seed = time(NULL);
 	srand(seed);
 	int angle = rand() % 360;
-	int speedX = ball.GetSpeed().first * cos(angle/180* 3.1415926535) - ball.GetSpeed().second * sin(angle/180* 3.1415926535);
-	int speedY = ball.GetSpeed().first * sin(angle / 180 * 3.1415926535) + ball.GetSpeed().second * cos(angle / 180 * 3.1415926535);
-	ball.ChangeSpeed({ speedX,speedY });
+	for (int i = 0; i < balls->size(); i++) {
+		int speedX = balls->at(i).GetSpeed().first * cos(angle / 180 * 3.1415926535) - balls->at(i).GetSpeed().second * sin(angle / 180 * 3.1415926535);
+		int speedY = balls->at(i).GetSpeed().first * sin(angle / 180 * 3.1415926535) + balls->at(i).GetSpeed().second * cos(angle / 180 * 3.1415926535);
+		balls->at(i).ChangeSpeed({ speedX,speedY });
+	}
+}
+void NewBall::Action(shared_ptr<vector<Ball>> balls, Plat& plat) {
+	printf("Newball");
+	pair<int, int> pos = {plat.GetPos().first-10+plat.GetSize().first/2,(int)(plat.GetPos().second * 0.9 - 20)};
+	pair<int, int> speed = { -5,-5 };
+	int count = balls->size();
+	Ball* ball = new Ball(speed, pos); 
+	sf::CircleShape newimage = ball->GetImage();
+	newimage.setFillColor(sf::Color(255, 0, 102));
+	balls->push_back(*ball);
 }
 void BonusFunctions::NewBonus(shared_ptr<Bonus> newbonus) {
 	allBonuses.push_back(newbonus);
@@ -99,9 +121,12 @@ void BonusFunctions::NewBonus(shared_ptr<Bonus> newbonus) {
 void BonusFunctions::DeleteBonus(int num) {
 	allBonuses.erase(allBonuses.begin()+num);
 }
-void BonusFunctions::MovingBonusBlocks() {
+void BonusFunctions::MovingBonusBlocks(int height) {
 	for (int i = 0; i < allBonuses.size(); i++) {
 		allBonuses[i]->Movement();
+		if (allBonuses[i]->GetPos().second > height) {
+			DeleteBonus(i);
+		}
 	}
 }
 void BonusFunctions::IncreaseSpeedByBlock(Ball& ball) {
@@ -149,6 +174,11 @@ void BonusFunctions::SpawnBonuses(Block block) {
 		}
 		case 4: {
 			shared_ptr<Bonus> newbonus = make_shared<SaveOneLose>(block.GetPos());
+			this->NewBonus(newbonus);
+			break;
+		}
+		case 5: {
+			shared_ptr<Bonus> newbonus = make_shared<NewBall>(block.GetPos());
 			this->NewBonus(newbonus);
 			break;
 		}

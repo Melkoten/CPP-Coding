@@ -14,7 +14,7 @@ protected:
 public:
 	Bonus(pair<int, int> position);
 	virtual ~Bonus() = default;
-	virtual void Action(Ball& ball, Plat& plat) = 0;
+	virtual void Action(shared_ptr<vector<Ball>> balls, Plat& plat) = 0;
 	void Movement();
 	void ChangePos(pair<int, int> pos);
 	void ChangeSize(pair<int, int> sz);
@@ -31,7 +31,7 @@ private:
 	int incr = 1;
 public:
 	IncreaseSpeed(pair<int, int> position);
-	void Action(Ball& ball, Plat& plat)  override;
+	void Action(shared_ptr<vector<Ball>> balls, Plat& plat)  override;
 };
 
 class IncreasePlat : public Bonus {
@@ -39,19 +39,25 @@ private:
 	int incr = 20;
 public:
 	IncreasePlat(pair<int, int> position);
-	void Action(Ball& ball, Plat& plat)  override;
+	void Action(shared_ptr<vector<Ball>> balls, Plat& plat)  override;
 };
 
 class ChangeDirection : public Bonus {
 public:
 	ChangeDirection(pair<int, int> position);
-	void Action(Ball& ball, Plat& plat)  override;
+	void Action(shared_ptr<vector<Ball>> balls, Plat& plat)  override;
 };
 
 class SaveOneLose : public Bonus {
 public:
 	SaveOneLose(pair<int, int> position);
-	void Action(Ball& ball, Plat& plat)  override;
+	void Action(shared_ptr<vector<Ball>> balls, Plat& plat)  override;
+};
+
+class NewBall : public Bonus {
+public:
+	NewBall(pair<int, int> position);
+	void Action(shared_ptr<vector<Ball>> balls, Plat& plat)  override;
 };
 
 class BonusFunctions {
@@ -61,7 +67,7 @@ public:
 	BonusFunctions() {};
 	void NewBonus(shared_ptr<Bonus> newbonus);
 	void DeleteBonus(int num);
-	void MovingBonusBlocks();
+	void MovingBonusBlocks(int height);
 	vector<shared_ptr<Bonus>> const GetBonuses() { return allBonuses; };
 	void SpawnBonuses(Block block); //add new bonus (one of five types)
 	void IncreaseSpeedByBlock(Ball& ball);

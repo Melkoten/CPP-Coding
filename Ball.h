@@ -20,6 +20,5 @@ public:
 	int const GetRad() { return (this->radius); }
 	sf::CircleShape GetImage() { return(this->image); }
 	bool const GetMoving() { return (this->Moving); }
-	void Start(pair<int, int> start);
 	void Movement();
 };

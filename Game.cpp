@@ -38,20 +38,23 @@ void MeetBlocks(Ball& ball, shared_ptr<vector<Block>> blocks, BonusFunctions& bf
 		if (ball.GetImage().getGlobalBounds().intersects(blocks->at(i).GetImage().getGlobalBounds())) {
 			sf::FloatRect intersection;
 			ball.GetImage().getGlobalBounds().intersects(blocks->at(i).GetImage().getGlobalBounds(), intersection);
-			if ((intersection.width) > intersection.height) {
+			if ((intersection.width) >= intersection.height) {
 				ball.ChangePos({ball.GetPos().first - ball.GetSpeed().first , ball.GetPos().second - ball.GetSpeed().second });// here
 				ball.ChangeSpeed({ ball.GetSpeed().first, ball.GetSpeed().second * (-1) }); // left or right
-				//ball.ChangePos({ ball.GetPos().first, ball.GetPos().second});
+				if (ball.GetImage().getGlobalBounds().intersects(blocks->at(i).GetImage().getGlobalBounds())) {
+					ball.ChangeSpeed({ ball.GetSpeed().first * (-1), ball.GetSpeed().second * (-1) });
+					ball.ChangePos({ ball.GetPos().first + 2 * ball.GetSpeed().first , ball.GetPos().second + 2 * ball.GetSpeed().second });
+				}
 			}
 			else if ((intersection.width) < intersection.height) {
 				ball.ChangePos({ ball.GetPos().first - ball.GetSpeed().first , ball.GetPos().second - ball.GetSpeed().second }); //here
 				ball.ChangeSpeed({ ball.GetSpeed().first * (-1), ball.GetSpeed().second});//up or down
-				//ball.ChangePos({ ball.GetPos().first, ball.GetPos().second });
+				if (ball.GetImage().getGlobalBounds().intersects(blocks->at(i).GetImage().getGlobalBounds())) {
+					ball.ChangeSpeed({ ball.GetSpeed().first * (-1), ball.GetSpeed().second * (-1) });
+					ball.ChangePos({ ball.GetPos().first + 2 * ball.GetSpeed().first , ball.GetPos().second + 2 * ball.GetSpeed().second });
+				}
 			}
-			else {
-				ball.ChangePos({ ball.GetPos().first - ball.GetSpeed().first , ball.GetPos().second - ball.GetSpeed().second }); //here
-				ball.ChangeSpeed({ ball.GetSpeed().first*(-1), ball.GetSpeed().second * (-1)}); //ugol
-			}
+
 			if (blocks->at(i).CanDestroy()) {
 				blocks->at(i).DecreaseHP();
 				*score = *score + 1;
@@ -61,28 +64,56 @@ void MeetBlocks(Ball& ball, shared_ptr<vector<Block>> blocks, BonusFunctions& bf
 		}
 	}
 }
-void MeetBonus(Ball& ball, Plat& plat, BonusFunctions& bfunc) {
+void MeetBonus(shared_ptr<vector<Ball>> balls, Plat& plat, BonusFunctions& bfunc) {
 	vector<shared_ptr<Bonus>> allBonuses = bfunc.GetBonuses();
 	for (int i = 0; i < size(allBonuses); i++) {
 		if (plat.GetImage().getGlobalBounds().intersects(allBonuses[i]->GetImage().getGlobalBounds())) {
-			allBonuses[i]->Action(ball, plat);
+			allBonuses[i]->Action(balls, plat);
 			bfunc.DeleteBonus(i);
 			printf("bonus activated ");
 			//i = i - 1; //mistake with memory may be here;
 		}
 	}
 }
-void DrawAll(sf::RenderWindow& window, Ball& ball, Plat& plat, BonusFunctions& bfunc, shared_ptr<vector<Block>> block, int score, int save) {
+void MeetBall(Ball& ball1, Ball& ball2) {
+	if (ball1.GetImage().getGlobalBounds().intersects(ball2.GetImage().getGlobalBounds())) {
+		int speedX = ball1.GetSpeed().first;
+		int speedY = ball1.GetSpeed().second;
+		ball1.ChangeSpeed({ ball2.GetSpeed().first,ball2.GetSpeed().second });
+		ball2.ChangeSpeed({ speedX,speedY });
+	}
+}
+void DrawAll(sf::RenderWindow& window, shared_ptr<vector<Ball>> balls, Plat& plat, BonusFunctions& bfunc, shared_ptr<vector<Block>> block, int score, int save) {
 	window.clear();
-	window.draw(ball.GetImage());
+	for (int i = 0; i < balls->size(); i++) {
+		window.draw(balls->at(i).GetImage());
+	}
 	window.draw(plat.GetImage());
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < block->size(); i++) {
 		window.draw(block->at(i).GetImage());
 	}
 	for (int i = 0; i < bfunc.GetBonuses().size(); i++) {
 		vector<shared_ptr<Bonus>> allBonuses = bfunc.GetBonuses();
 		window.draw(allBonuses[i]->GetImage());
 	}
+	sf::Vector2f sz = sf::Vector2f(1200, 3);
+	sf::RectangleShape image1 = sf::RectangleShape(sz);
+	image1.setPosition(0,0);
+	image1.setFillColor(sf::Color::Cyan);
+	sf::RectangleShape image4 = sf::RectangleShape(sz);
+	image4.setPosition(0, 900-3);
+	image4.setFillColor(sf::Color::Cyan);
+	sz= sf::Vector2f(3, 900);
+	sf::RectangleShape image2 = sf::RectangleShape(sz);
+	image2.setPosition(1200, 0);
+	image2.setFillColor(sf::Color::Cyan);
+	sf::RectangleShape image3 = sf::RectangleShape(sz);
+	image3.setPosition(0, 0);
+	image3.setFillColor(sf::Color::Cyan);
+	window.draw(image1);
+	window.draw(image2);
+	window.draw(image3);
+	window.draw(image4);
 	PrintData(window, score, save);
 	window.display();
 
@@ -146,11 +177,14 @@ Game::Game(pair<int, int> fieldData, pair<int, int> fullWindow) {
 	this->fieldData = fieldData;
 	this->fullWindow = fullWindow;
 }
-Ball& Game::SpawnBall() {
+shared_ptr<vector<Ball>> Game::SpawnBall() {
+	shared_ptr<vector<Ball>> balls = make_shared<vector<Ball>>();
 	pair<int, int> pos = { this->fieldData.first / 2 - 10,(int)(this->fieldData.second * 0.9 - 20) };
 	pair<int, int> speed = { 5,5 };
 	Ball* ball = new Ball(speed, pos);
-	return *ball;
+	ball->ChangeMoving(false);
+	balls->push_back(*ball);
+	return balls;
 }
 Plat& Game::SpawnPlat() {
 	pair<int, int> pos = { this->fieldData.first / 2 - 75, (int)(this->fieldData.second * 0.9)};
@@ -163,7 +197,7 @@ shared_ptr<vector<Block>> Game::SpawnBlocks() {
 		for (int j = 0; j < 5; j++) {
 			int seed = time(NULL);
 			srand(seed);
-			int flag = (rand()+i*j) % 5;
+			int flag = (rand()+i*j) % 6;
 			int startX = (this->fieldData.first -(60 * 10 + 15 * 9)) / 2;
 			int startY = (this->fieldData.second - (60 * 6 + 15 * 5)) / 2;
 			pair<int, int> pos = {60*i+15*i+startX, 60*j+15*j+startY};
@@ -190,12 +224,21 @@ sf::RenderWindow& Game::SpawnWindow() {
 	window->setKeyRepeatEnabled(false);
 	return *window;
 }
-void Game::Movement(Ball& ball, Plat& plat, shared_ptr<vector<Block>> blocks, BonusFunctions& bfunc) {
-	ball.Movement();
-	MeetWalls(ball, plat, fieldData, &score);
-	MeetPlat(ball, plat);
-	MeetBlocks(ball, blocks, bfunc, &score);
-	MeetBonus(ball, plat, bfunc);
+void Game::Movement(shared_ptr<vector<Ball>> balls, Plat& plat, shared_ptr<vector<Block>> blocks, BonusFunctions& bfunc) {
+	for (int i = 0; i < balls->size(); i++) {
+		if (balls->at(i).GetMoving()) {
+			balls->at(i).Movement();
+			MeetWalls(balls->at(i), plat, fieldData, &score);
+			MeetPlat(balls->at(i), plat);
+			MeetBlocks(balls->at(i), blocks, bfunc, &score);
+			for (int j = 0; j < balls->size(); j++) {
+				if ((j != i) && (balls->at(i).GetMoving())) {
+					MeetBall(balls->at(i), balls->at(j));
+				}
+			}
+		}
+	}
+	MeetBonus(balls, plat, bfunc);
 }
 bool Game::ZeroBlocks(shared_ptr<vector<Block>> blocks) {
 	bool flag = true;
@@ -213,7 +256,7 @@ void Game::StartGame() {
 	shared_ptr<vector<Block>> blocks = SpawnBlocks();
 	BonusFunctions& bfunc = SpawnBfunc();
 	Plat& plat = SpawnPlat();
-	Ball& ball = SpawnBall();
+	shared_ptr<vector<Ball>> balls = SpawnBall();
 	while (window.isOpen()) {
 		sf::Event event;
 		while (window.pollEvent(event)) {
@@ -226,8 +269,10 @@ void Game::StartGame() {
 					if (plat.GetPos().first > 0) {
 						plat.ChangeSpeed({-10,0});
 						plat.Movement();
-						if (!ball.GetMoving()) {
-							ball.ChangePos({ (ball.GetPos().first - 10), ball.GetPos().second});
+						for (int i = 0; i < balls->size(); i++) {
+							if (!balls->at(i).GetMoving()) {
+								balls->at(i).ChangePos({ (balls->at(i).GetPos().first - 10), balls->at(i).GetPos().second });
+							}
 						}
 					}
 				}
@@ -235,23 +280,25 @@ void Game::StartGame() {
 					if (plat.GetPos().first < fieldData.first-plat.GetSize().first) {
 						plat.ChangeSpeed({10,0 });
 						plat.Movement();
-						if (!ball.GetMoving()) {
-							ball.ChangePos({ (ball.GetPos().first + 10), ball.GetPos().second });
+						for (int i = 0; i < balls->size(); i++) {
+							if (!balls->at(i).GetMoving()) {
+								balls->at(i).ChangePos({ (balls->at(i).GetPos().first + 10), balls->at(i).GetPos().second });
+							}
 						}
 					}
 				}
 			}
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
-				ball.ChangeMoving(true);
+			for (int i = 0; i < balls->size(); i++) {
+				balls->at(i).ChangeMoving(true);
 			}
-		if (ball.GetMoving() == true) {
-				Movement(ball, plat, blocks, bfunc);
-			}
-		bfunc.MovingBonusBlocks();
+		}
+		Movement(balls, plat, blocks, bfunc);
+		bfunc.MovingBonusBlocks(this->fieldData.second);
 		if (ZeroBlocks(blocks)) {
 				window.close();
 				break;
 		}
-		DrawAll(window, ball, plat, bfunc, blocks, this->score, plat.GetSave());
+		DrawAll(window, balls, plat, bfunc, blocks, this->score, plat.GetSave());
 		}
 }

@@ -15,6 +15,10 @@ void Ball::ChangePos(pair<int, int> newpos) {
 	image.setPosition(pos);
 }
 void Ball::ChangeSpeed(pair<int, int> speed) {
+	if (speed.first < -10) speed.first = -10;
+	if (speed.first > 10) speed.first = 10;
+	if (speed.second < -10) speed.first = -10;
+	if (speed.second > 10) speed.second = 10;
 	this->speedXY = speed;
 }
 void Ball::ChangeImage(sf::CircleShape img) {
@@ -22,15 +26,6 @@ void Ball::ChangeImage(sf::CircleShape img) {
 }
 void Ball::ChangeMoving(bool flag) {
 	this->Moving = flag;
-}
-void Ball::Start(pair<int, int> fieldData) {
-	this->Moving = false;
-	fieldData.first = fieldData.first / 2;
-	fieldData.second = fieldData.second * 0.9 - 20;
-	this->ChangePos(fieldData);
-	pair<int, int> Speed;
-	Speed.first = 5; Speed.second = 5;
-	this->ChangeSpeed(Speed);
 }
 void Ball::Movement() {
 	sf::Vector2f sd = sf::Vector2f(this->speedXY.first, this->speedXY.second);

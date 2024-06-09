@@ -6,7 +6,7 @@ class Plat {
 private:
 	pair<int, int> speedXY = {10,0};
 	pair<int, int> position;
-	pair<int, int> size = {150, 20};
+	pair<int, int> size = {150, 10};
 	sf::RectangleShape image;
 	int SaveCount = 0;
 public:
